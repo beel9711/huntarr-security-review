@@ -1,0 +1,14 @@
+services:
+  huntarr:
+    image: ghcr.io/plexguide/huntarr:latest
+    container_name: huntarr-security-repro
+    ports:
+      - "9705:9705"
+    environment:
+      - TZ=UTC
+      - BASE_URL=
+      - PUID=0
+      - PGID=0
+    tmpfs:
+      - /config
+    restart: "no"

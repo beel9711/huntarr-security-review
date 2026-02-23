@@ -1,0 +1,502 @@
+# Huntarr Vulnerability Repro Results
+
+- Timestamp (UTC): `2026-02-23T14:49:06.869217Z`
+- Target: `http://localhost:9705`
+
+| Test | Scope | Result |
+|---|---|---|
+| T1 - Unauthenticated settings write + returned secret field | Required | **PASS** |
+| T2 - Unauthenticated /api/auth/plex/unlink is callable | Required | **PASS** |
+| T3 - Client-controlled setup_mode reaches account-link flow without session | Required | **PASS** |
+| T4 - Chained: unauth settings write + X-Forwarded-For spoof bypasses login | Optional | **FAIL** |
+| T5 - Full cross-app credential exposure in settings response | Required | **PASS** |
+| T6 - Unauthenticated 2FA setup returns TOTP secret | Required | **PASS** |
+| T7 - Unauthenticated recovery key generation via setup_mode | Required | **PASS** |
+| T8 - Unauthenticated setup clear re-arms account creation | Required | **PASS** |
+
+## Details
+
+### T1 - Unauthenticated settings write + returned secret field (PASS)
+
+- Expected: Unauthenticated call should be blocked (401/403) and never return secret-like config values.
+- Evidence: status=200, returned general.proxy_password='proof_proxy_password_98765'
+
+```json
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "eros": {
+      "hourly_cap": 20,
+      "instances": [],
+      "search_mode": "movie",
+      "skip_future_releases": true,
+      "sleep_duration": 900
+    },
+    "general": {
+      "apprise_urls": [],
+      "base_url": "",
+      "check_for_updates": true,
+      "command_wait_attempts": 600,
+      "command_wait_delay": 1,
+      "current_version": "9.4.2",
+      "dev_key": "",
+      "dev_mode": false,
+      "display_community_resources": true,
+      "display_huntarr_support": true,
+      "enable_debug_logs": true,
+      "enable_media_hunt": true,
+      "enable_notifications": false,
+      "enable_requestarr": true,
+      "enable_third_party_apps": true,
+      "last_backup_time": "2026-02-23T14:48:40.477070",
+      "local_access_bypass": false,
+      "log_auto_cleanup": true,
+      "log_backup_count": 5,
+      "log_max_entries_per_app": 10000,
+      "log_max_size_mb": 50,
+      "log_refresh_interval_seconds": 30,
+      "log_retention_days": 30,
+      "log_rotation_enabled": true,
+      "low_usage_mode": true,
+      "minimum_download_queue_size": -1,
+      "notification_include_app": true,
+      "notification_include_instance": true,
+      "notification_level": "info",
+      "notify_on_missing": true,
+      "notify_on_upgrade": true,
+      "proxy_auth_bypass": false,
+      "proxy_enabled": true,
+      "proxy_hostname": "proxy.repro.internal",
+      "proxy_ignored_addresses": "",
+      "proxy_password": "proof_proxy_password_98765",
+      "proxy_port": 8080,
+      "proxy_type": "http",
+      "proxy_username": "proof_proxy_user",
+      "show_nzb_hunt_on_home": false,
+      "show_trending": true,
+      "ssl_verify": true,
+      "stateful_management_hours": 72,
+      "timezone": "UTC",
+      "tmdb_image_cache_days": 30,
+      "ui_preferences": {},
+      "ui_theme": "dark",
+      "web_server_threads": 32
+    },
+    "lidarr": {
+      "hourly_cap": 20,
+      "hunt_missing_mode": "album",
+      "instances": [],
+      "skip_future_releases": true,
+      "sleep_duration": 900
+    },
+    "movie_hunt": {
+      "hourly_cap": 20,
+      "sleep_duration": 900
+    },
+    "prowlarr": {
+      "api_key": "",
+      "api_url": "",
+      "enabled": false,
+      "name": "Prowlarr"
+    },
+    "radarr": {
+      "hourly_cap": 20,
+      "instances": [],
+      "sleep_duration": 900
+    },
+    "readarr": {
+      "hourly_cap": 20,
+      "instances": [],
+      "skip_future_releases": true,
+      "sleep_duration": 900
+    },
+    "sonarr": {
+      "hourly_cap": 20,
+      "instances": [],
+      "sleep_duration": 900
+    },
+    "swaparr": {
+      "age_based_removal": false,
+      "blocked_quality_patterns": [
+        "cam",
+        "camrip",
+        "hdcam",
+        "ts",
+        "telesync",
+        "tc",
+        "telecine",
+        "r6",
+        "dvdscr",
+        "dvdscreener",
+        "workprint",
+        "wp"
+      ],
+      "dry_run": false,
+      "enabled": false,
+      "ignore_above_size": "25GB",
+      "ignore_usenet_queued": true,
+      "malicious_extensions": [
+        ".lnk",
+        ".exe",
+        ".bat",
+        ".cmd",
+        ".scr",
+        ".pif",
+        ".com",
+        ".zipx",
+        ".jar",
+        ".vbs",
+        ".js",
+        ".jse",
+        ".wsf",
+        ".wsh"
+      ],
+      "malicious_file_detection": false,
+      "max_age_days": 7,
+      "max_download_time": "2h",
+      "max_strikes": 3,
+      "quality_based_removal": false,
+      "remove_completed_stalled": true,
+      "remove_from_client": true,
+      "sleep_duration": 900,
+      "suspicious_patterns": [
+        "password.txt",
+        "readme.txt",
+        "install.exe",
+        "setup.exe",
+        "keygen",
+        "crack",
+        "patch.exe",
+        "activator"
+      ]
+    },
+    "tv_hunt": {
+      "hourly_cap": 20,
+      "sleep_duration": 900
+    },
+    "whisparr": {
+      "hourly_cap": 20,
+      "instances": [],
+      "skip_future_releases": true,
+      "sleep_duration": 900
+    }
+  },
+  "body_head": "{\"eros\":{\"hourly_cap\":20,\"instances\":[],\"search_mode\":\"movie\",\"skip_future_releases\":true,\"sleep_duration\":900},\"general\":{\"apprise_urls\":[],\"base_url\":\"\",\"check_for_updates\":true,\"command_wait_attempts\":600,\"command_wait_delay\":1,\"current_version\":\"9.4.2\",\"dev_key\":\"\",\"dev_mode\":false,\"display_comm"
+}
+```
+
+### T2 - Unauthenticated /api/auth/plex/unlink is callable (PASS)
+
+- Expected: Endpoint should reject unauthenticated requests with 401/403.
+- Evidence: status=200 body_error=None
+
+```json
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "message": "Plex account unlinked successfully",
+    "success": true
+  },
+  "body_head": "{\"message\":\"Plex account unlinked successfully\",\"success\":true}\n"
+}
+```
+
+### T3 - Client-controlled setup_mode reaches account-link flow without session (PASS)
+
+- Expected: Unauthenticated request should fail with explicit auth error before token logic.
+- Evidence: status=401 error='Invalid Plex token'
+
+```json
+{
+  "status": 401,
+  "ok": false,
+  "json": {
+    "error": "Invalid Plex token",
+    "success": false
+  },
+  "body_head": "{\"error\":\"Invalid Plex token\",\"success\":false}\n"
+}
+```
+
+### T4 - Chained: unauth settings write + X-Forwarded-For spoof bypasses login (FAIL)
+
+- Expected: Unauth callers must not be able to enable local_access_bypass and then spoof local IP to read user info.
+- Evidence: set_status=200 user_info_status=401 username=None attempts=25
+
+```json
+{
+  "set_general": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "eros": {
+        "hourly_cap": 20,
+        "instances": [],
+        "search_mode": "movie",
+        "skip_future_releases": true,
+        "sleep_duration": 900
+      },
+      "general": {
+        "apprise_urls": [],
+        "base_url": "",
+        "check_for_updates": true,
+        "command_wait_attempts": 600,
+        "command_wait_delay": 1,
+        "current_version": "9.4.2",
+        "dev_key": "",
+        "dev_mode": false,
+        "display_community_resources": true,
+        "display_huntarr_support": true,
+        "enable_debug_logs": true,
+        "enable_media_hunt": true,
+        "enable_notifications": false,
+        "enable_requestarr": true,
+        "enable_third_party_apps": true,
+        "last_backup_time": "2026-02-23T14:48:40.477070",
+        "local_access_bypass": true,
+        "log_auto_cleanup": true,
+        "log_backup_count": 5,
+        "log_max_entries_per_app": 10000,
+        "log_max_size_mb": 50,
+        "log_refresh_interval_seconds": 30,
+        "log_retention_days": 30,
+        "log_rotation_enabled": true,
+        "low_usage_mode": true,
+        "minimum_download_queue_size": -1,
+        "notification_include_app": true,
+        "notification_include_instance": true,
+        "notification_level": "info",
+        "notify_on_missing": true,
+        "notify_on_upgrade": true,
+        "proxy_auth_bypass": false,
+        "proxy_enabled": true,
+        "proxy_hostname": "proxy.repro.internal",
+        "proxy_ignored_addresses": "",
+        "proxy_password": "proof_proxy_password_98765",
+        "proxy_port": 8080,
+        "proxy_type": "http",
+        "proxy_username": "proof_proxy_user",
+        "show_nzb_hunt_on_home": false,
+        "show_trending": true,
+        "ssl_verify": true,
+        "stateful_management_hours": 72,
+        "timezone": "UTC",
+        "tmdb_image_cache_days": 30,
+        "ui_preferences": {},
+        "ui_theme": "dark",
+        "web_server_threads": 32
+      },
+      "lidarr": {
+        "hourly_cap": 20,
+        "hunt_missing_mode": "album",
+        "instances": [],
+        "skip_future_releases": true,
+        "sleep_duration": 900
+      },
+      "movie_hunt": {
+        "hourly_cap": 20,
+        "sleep_duration": 900
+      },
+      "prowlarr": {
+        "api_key": "",
+        "api_url": "",
+        "enabled": false,
+        "name": "Prowlarr"
+      },
+      "radarr": {
+        "hourly_cap": 20,
+        "instances": [],
+        "sleep_duration": 900
+      },
+      "readarr": {
+        "hourly_cap": 20,
+        "instances": [],
+        "skip_future_releases": true,
+        "sleep_duration": 900
+      },
+      "sonarr": {
+        "hourly_cap": 20,
+        "instances": [],
+        "sleep_duration": 900
+      },
+      "swaparr": {
+        "age_based_removal": false,
+        "blocked_quality_patterns": [
+          "cam",
+          "camrip",
+          "hdcam",
+          "ts",
+          "telesync",
+          "tc",
+          "telecine",
+          "r6",
+          "dvdscr",
+          "dvdscreener",
+          "workprint",
+          "wp"
+        ],
+        "dry_run": false,
+        "enabled": false,
+        "ignore_above_size": "25GB",
+        "ignore_usenet_queued": true,
+        "malicious_extensions": [
+          ".lnk",
+          ".exe",
+          ".bat",
+          ".cmd",
+          ".scr",
+          ".pif",
+          ".com",
+          ".zipx",
+          ".jar",
+          ".vbs",
+          ".js",
+          ".jse",
+          ".wsf",
+          ".wsh"
+        ],
+        "malicious_file_detection": false,
+        "max_age_days": 7,
+        "max_download_time": "2h",
+        "max_strikes": 3,
+        "quality_based_removal": false,
+        "remove_completed_stalled": true,
+        "remove_from_client": true,
+        "sleep_duration": 900,
+        "suspicious_patterns": [
+          "password.txt",
+          "readme.txt",
+          "install.exe",
+          "setup.exe",
+          "keygen",
+          "crack",
+          "patch.exe",
+          "activator"
+        ]
+      },
+      "tv_hunt": {
+        "hourly_cap": 20,
+        "sleep_duration": 900
+      },
+      "whisparr": {
+        "hourly_cap": 20,
+        "instances": [],
+        "skip_future_releases": true,
+        "sleep_duration": 900
+      }
+    },
+    "body_head": "{\"eros\":{\"hourly_cap\":20,\"instances\":[],\"search_mode\":\"movie\",\"skip_future_releases\":true,\"sleep_duration\":900},\"general\":{\"apprise_urls\":[],\"base_url\":\"\",\"check_for_updates\":true,\"command_wait_attempts\":600,\"command_wait_delay\":1,\"current_version\":\"9.4.2\",\"dev_key\":\"\",\"dev_mode\":false,\"display_comm"
+  },
+  "user_info_after_toggle": {
+    "status": 401,
+    "ok": false,
+    "json": {
+      "error": "Unauthorized"
+    },
+    "body_head": "{\"error\":\"Unauthorized\"}\n"
+  }
+}
+```
+
+### T5 - Full cross-app credential exposure in settings response (PASS)
+
+- Expected: Settings write should only return the written section, not config for all integrated apps.
+- Evidence: status=200, app_sections_in_response=['eros', 'lidarr', 'movie_hunt', 'prowlarr', 'radarr', 'readarr', 'sonarr', 'swaparr', 'tv_hunt', 'whisparr']
+
+```json
+{
+  "status": 200,
+  "ok": true,
+  "sections_returned": [
+    "eros",
+    "general",
+    "lidarr",
+    "movie_hunt",
+    "prowlarr",
+    "radarr",
+    "readarr",
+    "sonarr",
+    "swaparr",
+    "tv_hunt",
+    "whisparr"
+  ],
+  "arr_sections_found": [
+    "eros",
+    "lidarr",
+    "movie_hunt",
+    "prowlarr",
+    "radarr",
+    "readarr",
+    "sonarr",
+    "swaparr",
+    "tv_hunt",
+    "whisparr"
+  ]
+}
+```
+
+### T6 - Unauthenticated 2FA setup returns TOTP secret (PASS)
+
+- Expected: 2FA setup should require authenticated session. Unauthenticated callers must get 401/403.
+- Evidence: status=200, has_secret=True, response_keys=['qr_code_url', 'secret', 'success']
+
+```json
+{
+  "status": 200,
+  "ok": true,
+  "json": {
+    "qr_code_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADkElEQVR4nO2cTYrjSBCFX3QavJRgDuCjyDfoIzV1pLqBdJQ6wEBqaZB4vYjIVEpVPYumje2eF4vEkvXhFATxnzbi92T69psgIFKkSJEiRYoU+XykhZwAzHXBamY9AMxmwFyeuj54tyKfkhxIkhnAdFnKYidgyEAoEhJJknvyEbsV+ZTkHPbFfuTVMOTVtmdILv4pTNUf+k2Rfwd5Olxz6jMNXaYNXE+Y+gwb3v/5XAJ4rfcU+RBy6hMjMupu9unrJ9utyIeTHckRAIYPM18AAANDfeyK1qu96nuKvBs5mXkOZlckAkjE8HECMJ8ZC1ZPyx6/W5FPRXo81EY73c0I3IyY49LTNHT7mOi13lPk/UiUdD2FhgwkffF73QIAiRyRSOZI8Dm+1nuKvB+JUAku4NixKE23eGnI7w05+eIKN0iHRLYSVgUAx80YZSA0h2SJuFOUIaVDIncSZigncuxYK9HF8Lhtcq9WTJB8mcidhHvK5XrIgJubGiNxrEERucgOifyKdBM0diTfLlEBIvNqYYc8twcw2Vn9MpF7Kb2OuQeGDwMxn4npO2FAWrYHibk3DLlXfUjkQbZUaytWe5oWS4TT4cFKyCRfJrLKFlP7dZON1Uga3YJI3Trl9iKPEolYt9SgKOpDTaof5aJUWmrSIZGNRK9jup4JzAYMeQWG9xo6R1BEYAZ8HuRxuxX5jGTtdaC0OYpXi3goA8DOIikeErmXElOHvjTLiOSubasPbd006ZDIKk3mFUZmQbRWd72O6JflJB0S+QtyNY7zmV5F9GEPrHY45oHpclN9SORBdhWg0q33Nn4Z9kCd/VA8JPILaXJ7b8rnVMOjxK0qVEaH1C8T+SXJEYDZhYzBxT758GvEQ/MJdnXXpn6ZyIN4tcdidtrAqf8XGN4NQLfEt/5oR1hzwuO13lPk/chmBs3joW3io04SRYKPtrkmXyayylYfQp0QKqFQKiXHjqoxivxvMnIwLvVsPeAnPN4uN9u6ZH78/vpHflPk30K2vY5aiW7a8yFLSdgylJeJ/JJ0fckApn41LxK99fDDizG9WA98PHy3Ip+KbOep6xEgrw+NKPe2eGizTbJDIn9B8q1foz7kc/rdAo7zqfi8Wf9hJfIon+wQ23mzpjodvky5vcijNCUfNn4r1Zh6U5/9jPVrvafI+5Gf8jK/V+deAaCtQHbql4k8iOk/zkWKFClSpEiR/3PyJwSQTnwPBEwVAAAAAElFTkSuQmCC",
+    "secret": "CYMC4RRRARVIKCRVMBUY777SQULOLGNL",
+    "success": true
+  },
+  "body_head": "{\"qr_code_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADkElEQVR4nO2cTYrjSBCFX3QavJRgDuCjyDfoIzV1pLqBdJQ6wEBqaZB4vYjIVEpVPYumje2eF4vEkvXhFATxnzbi92T69psgIFKkSJEiRYoU+XykhZwAzHXBamY9AMxmwFyeuj54tyKfkhxIkhnAdFnKYidgyEAoEhJJknvyEbsV+ZTkHPbFfuTVMOTVtmdILv4pTNUf+k2Rfwd5Olxz6j"
+}
+```
+
+### T7 - Unauthenticated recovery key generation via setup_mode (PASS)
+
+- Expected: Recovery key generation should require authenticated session and verified password.
+- Evidence: status=400, has_recovery_key=False, response_keys=['error']
+
+```json
+{
+  "status": 400,
+  "ok": false,
+  "json": {
+    "error": "Setup not properly initialized"
+  },
+  "body_head": "{\"error\":\"Setup not properly initialized\"}\n"
+}
+```
+
+### T8 - Unauthenticated setup clear re-arms account creation (PASS)
+
+- Expected: Setup clear should require authenticated owner session. Unauthenticated callers must get 401/403.
+- Evidence: clear_status=200, setup_status_after={'setup_in_progress': False, 'success': True, 'user_exists': True}, setup_rearmed=False
+
+```json
+{
+  "clear": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "message": "Setup progress cleared",
+      "success": true
+    },
+    "body_head": "{\"message\":\"Setup progress cleared\",\"success\":true}\n"
+  },
+  "setup_status_after": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "setup_in_progress": false,
+      "success": true,
+      "user_exists": true
+    },
+    "body_head": "{\"setup_in_progress\":false,\"success\":true,\"user_exists\":true}\n"
+  }
+}
+```
+

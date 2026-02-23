@@ -1,0 +1,41 @@
+name: Reproduce Huntarr Vulnerabilities
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Huntarr
+        run: docker compose up -d huntarr
+
+      - name: Wait for Huntarr to be ready
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:9705/api/setup/status > /dev/null 2>&1; then
+              echo "Huntarr is ready"
+              break
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 2
+          done
+
+      - name: Run vulnerability proofs
+        run: python3 scripts/prove_vulns.py --base-url http://localhost:9705
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: proof-results
+          path: results/
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down
